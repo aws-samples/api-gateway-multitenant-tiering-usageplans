@@ -1,5 +1,5 @@
 const AWS = require("aws-sdk");
-const pools = require("./api_key_pools");
+const {findPoolForPlanId} = require("./api_key_pools");
 
 const {
   parseJwt,
@@ -49,7 +49,8 @@ exports.handler = function (event, context, callback) {
  * POST /admin/keys
  */
 function createKey(tableName, key, plansTable, jwt, rand, callback) {
-  const pool = pools.apiKeyPools.find((item) => item.planId === key.planId);
+  const pool = findPoolForPlanId(key.planId);
+  //  const pool = pools.apiKeyPools.find((item) => item.planId === key.planId);
 
   if (!pool) {
     createSiloedKey(tableName, key, plansTable, jwt, rand, callback);
@@ -62,6 +63,8 @@ function createKey(tableName, key, plansTable, jwt, rand, callback) {
  * POST /admin/keys
  */
 function createSiloedKey(tableName, key, plansTable, jwt, rand, callback) {
+  console.log("createSiloedKey");
+
   var apiKeyId = undefined;
 
   // first make sure we have a valid plan ID
@@ -131,35 +134,42 @@ function createSiloedKey(tableName, key, plansTable, jwt, rand, callback) {
 }
 
 function createPooledKey(pool, tableName, key, jwt, callback) {
+
+
   // first, choose a key from the pool.
   // a more sophisticated implementation would balance the load,
   // but for demo purposes, random suffices.
-  var randomKey = pool.apiKeys[Math.floor(Math.random() * pool.apiKeys.length)]; // note a production system can do much better than random.
+  var randomKeyFromPool = pool.apiKeys[Math.floor(Math.random() * pool.apiKeys.length)]; // note a production system can do much better than random.
   // first make sure we have a valid key ID
+
+  
+  console.log("createPooledKey", randomKeyFromPool);
 
   dynamo
     .getItem({
       TableName: tableName,
       Key: {
         id: {
-          S: randomKey,
+          S: randomKeyFromPool,
         },
       },
     })
     .promise()
     .then((data) => {
+      console.log("FoundPooledKey: ", JSON.stringify(data,0,2));
+      
       const newId = makeid(8);
       return dynamo
         .putItem({
           TableName: tableName,
           Item: {
-            id: { S: randomKey },
+            id: { S: newId },
             planId: { S: key.planId },
             name: { S: key.name },
             description: { S: key.description },
             enabled: { BOOL: key.enabled },
             owner: { S: jwt.sub },
-            value: key.value,
+            value: data.Item.value,
           },
         })
         .promise();

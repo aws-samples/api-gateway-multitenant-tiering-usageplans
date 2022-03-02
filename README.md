@@ -16,12 +16,15 @@ When deployed, the user has a sample web application that shows how customers ca
 The web app invokes REST APIs on a single AWS API Gateway deployment. Calls that perform CRUD operations on API Keys are grouped into `/admin/*` and require authentication with Amazon Cognito. A single REST API, `GET /api/data` is protected by the Usage Plan.  
 
 ## Installation 
-See [INSTALL.md](./INSTALL.md)
+See [INSTALL](./INSTALL.md)
 
 
 ## Walkthrough
-See [WALKTHROUGH.md](./WALKTHROUGH.md)
+See [WALKTHROUGH](./WALKTHROUGH.md)
 
+
+## Enable Pooling
+See [ENABLE_POOLING](./ENABLE_POOLING.md)
 
 ## Clean Up
 Removing the deployed assets from AWS account is done with the followig commands
@@ -37,8 +40,6 @@ amplify delete
 ```
 
 Note that the default behavior of `cdk destroy` is to retain certain stateful resources, such as DynamoDB Tables. As this is a code sample for training only, the CDK scripts have an explicit `removalPolicy` to override that default behavior and remove the DynamoDB Tables as well. 
-
-
 
 ## Security
 

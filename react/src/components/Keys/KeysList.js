@@ -59,6 +59,7 @@ const COLUMN_DEFINITIONS = [
 export default function KeysList({ user, setNotifications }) {
   const navigate = useNavigate();
   const [allItems, setAllItems] = useState([]);
+  const [isLoading, setLoading] = useState(false);
   const [preferences, setPreferences] = useState({
     visibleContent: ["name", "keyId", "enabled"],
     pageSize: 10,
@@ -93,9 +94,13 @@ export default function KeysList({ user, setNotifications }) {
   const { selectedItems } = collectionProps;
 
   useEffect(() => {
-    getKeys(user).then((items) => {
-      setAllItems(items);
-    }).catch((reason) => console.error("getKeys() failed: ", reason));
+    setLoading(true);
+    getKeys(user)
+      .then((items) => {
+        setAllItems(items);
+      })
+      .catch((reason) => console.error("getKeys() failed: ", reason))
+      .finally(() => setLoading(false));
   }, [user]);
 
   function handleEdit() {
@@ -107,12 +112,17 @@ export default function KeysList({ user, setNotifications }) {
     const confirm = window.confirm(
       `Are you sure you wish to delete the API Key "${selectedItems[0].name}"?"`
     );
-    if (confirm) {
-      deleteKey(user, selectedItems[0].id).then(() => {
+    if (!confirm) {
+      return;
+    }
+    setLoading(true);
+    setAllItems([]);
+    deleteKey(user, selectedItems[0].id)
+      .then(() => {
+        return new Promise((resolve) => setTimeout(resolve, 5000));
+      })
+      .then(() => {
         console.log("Deleted Key");
-        getKeys(user).then((items) => {
-          setAllItems(items);
-        });
         setNotifications([
           {
             type: "success",
@@ -121,8 +131,22 @@ export default function KeysList({ user, setNotifications }) {
             onDismiss: () => setNotifications([]),
           },
         ]);
-      }).catch((reason) => console.error("deleteKey() failed: ", reason));
-    }
+        return getKeys(user);
+      })
+      .then((items) => {
+        setAllItems(items);
+      })
+      .catch((reason) => console.error("deleteKey() failed: ", reason));
+
+    setTimeout(() => {
+      setLoading(true);
+      getKeys(user)
+        .then((items) => {
+          setAllItems(items);
+        })
+        .catch((reason) => console.error("getKeys() failed: ", reason))
+        .finally(() => setLoading(false));
+    }, 5000);
   }
 
   function handlePurchase() {
@@ -154,7 +178,11 @@ export default function KeysList({ user, setNotifications }) {
               >
                 Delete
               </Button>
-              <Button variant="primary" onClick={handlePurchase}>
+              <Button
+                disabled={isLoading}
+                variant="primary"
+                onClick={handlePurchase}
+              >
                 Purchase
               </Button>
             </SpaceBetween>
@@ -163,6 +191,8 @@ export default function KeysList({ user, setNotifications }) {
           Usage Keys
         </Header>
       }
+      loading={isLoading}
+      loadingText="Loading Keys"
       visibleColumns={preferences.visibleColumns}
       filter={
         <TextFilter

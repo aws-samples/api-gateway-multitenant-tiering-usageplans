@@ -62,6 +62,7 @@ const COLUMN_DEFINITIONS = [
 
 export default function PlansList({user, setNotifications}) {
   const [plans, setPlans] = useState([]);
+  const [isLoading, setLoading] = useState(false);
   const [preferences /*, setPreferences*/] = useState({
     visibleContent: ["name", "quota", "throttle", "price"],
     pageSize: 10,
@@ -85,6 +86,8 @@ export default function PlansList({user, setNotifications}) {
         />
       ),
     },
+    loading: {isLoading}, 
+    loadingText: "Loading Plans",
     pagination: { pageSize: preferences.pageSize },
     sorting: {},
     selection: {},
@@ -92,9 +95,11 @@ export default function PlansList({user, setNotifications}) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    setLoading(true);
     getPlans(user).then((items) => {
       setPlans(items);
-    }).catch((reason) => console.error("getPlans() failed: ", reason));
+    }).catch((reason) => console.error("getPlans() failed: ", reason))
+    .finally(()=>setLoading(false));
   }, [user]);
 
   const { selectedItems } = collectionProps;
@@ -123,29 +128,12 @@ export default function PlansList({user, setNotifications}) {
           Usage Plans
         </Header>
       }
+      loading={isLoading}
+      loadingText="Loading Keys"
       visibleColumns={preferences.visibleColumns}
-      // filter={
-      //   <TextFilter
-      //     {...filterProps}
-      //     filteringPlaceholder="Find Text..."
-      //     countText={`${filteredItemsCount} matching plans`}
-      //     >
-      //   </TextFilter>
-      // }
-      // pagination={<Pagination {...paginationProps} />}
-      // preferences={<TablePreferences
-      //   preferences={preferences}
-      //   setPreferences={setPreferences}
-      // />}
       items={items}
       selectionType="single"
     ></Table>
   );
 }
 
-// function TablePreferences({}) {
-//   return (
-//     <CollectionPreferences>
-//     </CollectionPreferences>
-//   )
-// }

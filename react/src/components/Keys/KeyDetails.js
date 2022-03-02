@@ -10,6 +10,7 @@ import {
   Select,
   Textarea,
   Toggle,
+  Spinner,
 } from "@awsui/components-react";
 import { useNavigate, useParams } from "react-router";
 import { createKey, getKey, updateKey } from "./KeyService";
@@ -19,12 +20,13 @@ export default function KeyDetails({ user, setNotifications }) {
   const [id, setId] = useState();
   const [planId, setPlanId] = useState();
   const [name, setName] = useState();
-  const [description, setDescription] = useState();
+  const [description, setDescription] = useState("");
   const [enabled, setEnabled] = useState(true);
   const navigate = useNavigate();
   const { keyId } = useParams();
   const [planOptions, setPlanOptions] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState();
+  const [isLoading, setLoading] = useState(false);
 
   useEffect(() => {
     if (keyId) {
@@ -60,6 +62,7 @@ export default function KeyDetails({ user, setNotifications }) {
       return;
     }
     if (keyId) {
+      setLoading(true);
       updateKey(user, { id, planId, name, description, enabled }).then((json) => {
         console.log("Key updated successfully");
         console.log(json);
@@ -72,8 +75,10 @@ export default function KeyDetails({ user, setNotifications }) {
           },
         ]);
         navigate("/keys");
-      }).catch((reason) => console.error("updateKey() failed: ", reason));
+      }).catch((reason) => console.error("updateKey() failed: ", reason))
+      .finally(()=>setLoading(false));
     } else {
+      setLoading(true);
       createKey(user, { planId, name, description, enabled }).then((json) => {
         console.log("Key created successfully");
         console.log(json);
@@ -86,7 +91,8 @@ export default function KeyDetails({ user, setNotifications }) {
           },
         ]);
         navigate("/keys");
-      }).catch((reason) => console.error("createKey() failed: ", reason));
+      }).catch((reason) => console.error("createKey() failed: ", reason))
+      .finally(()=>setLoading(false));
     }
   }
 
@@ -102,7 +108,7 @@ export default function KeyDetails({ user, setNotifications }) {
           <Button variant="link" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleSubmit}>
+          <Button loading={isLoading} disabled={isLoading || !planId || !name } variant="primary" onClick={handleSubmit}>
             Submit
           </Button>
         </SpaceBetween>

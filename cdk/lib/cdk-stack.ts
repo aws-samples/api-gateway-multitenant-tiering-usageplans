@@ -138,14 +138,14 @@ export class CdkStack extends Stack {
 
     // Lambda for basic health check, this will stay unprotected
     const healthcheckLambda = new lambda.Function(this, 'healthCheck', {
-      runtime: lambda.Runtime.NODEJS_12_X,
+      runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'health_check.handler',
       code: lambda.Code.fromAsset('../lambda'),
     });
 
     // Lambda for basic health check, this will stay unprotected
     const getDataLambda = new lambda.Function(this, 'getData', {
-      runtime: lambda.Runtime.NODEJS_12_X,
+      runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'get_data.handler',
       code: lambda.Code.fromAsset('../lambda'),
 
@@ -153,7 +153,7 @@ export class CdkStack extends Stack {
 
     // getPlans   
     const getPlansLambda = new lambda.Function(this, 'getPlans', {
-      runtime: lambda.Runtime.NODEJS_12_X,
+      runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'get_plans.handler',
       code: lambda.Code.fromAsset('../lambda'),
       role: lambdaRole,
@@ -165,7 +165,7 @@ export class CdkStack extends Stack {
 
     // getPlan   
     const getPlanLambda = new lambda.Function(this, 'getPlan', {
-      runtime: lambda.Runtime.NODEJS_12_X,
+      runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'get_plan.handler',
       code: lambda.Code.fromAsset('../lambda'),
       role: lambdaRole,
@@ -177,7 +177,7 @@ export class CdkStack extends Stack {
 
     // getKeys   
     const getKeysLambda = new lambda.Function(this, 'getKeys', {
-      runtime: lambda.Runtime.NODEJS_12_X,
+      runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'get_keys.handler',
       code: lambda.Code.fromAsset('../lambda'),
       role: lambdaRole,
@@ -189,7 +189,7 @@ export class CdkStack extends Stack {
 
     // createKey  
     const createKeyLambda = new lambda.Function(this, 'createKey', {
-      runtime: lambda.Runtime.NODEJS_12_X,
+      runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'create_key.handler',
       code: lambda.Code.fromAsset('../lambda'),
       role: lambdaRole,
@@ -201,7 +201,7 @@ export class CdkStack extends Stack {
 
     // getKey    
     const getKeyLambda = new lambda.Function(this, 'getKey', {
-      runtime: lambda.Runtime.NODEJS_12_X,
+      runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'get_key.handler',
       code: lambda.Code.fromAsset('../lambda'),
       role: lambdaRole,
@@ -213,7 +213,7 @@ export class CdkStack extends Stack {
 
     // updateKey 
     const updateKeyLambda = new lambda.Function(this, 'updateKey', {
-      runtime: lambda.Runtime.NODEJS_12_X,
+      runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'update_key.handler',
       code: lambda.Code.fromAsset('../lambda'),
       role: lambdaRole,
@@ -225,7 +225,7 @@ export class CdkStack extends Stack {
 
     // deleteKey 
     const deleteKeyLambda = new lambda.Function(this, 'deleteKey', {
-      runtime: lambda.Runtime.NODEJS_12_X,
+      runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'delete_key.handler',
       code: lambda.Code.fromAsset('../lambda'),
       role: lambdaRole,

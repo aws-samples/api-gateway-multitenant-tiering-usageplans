@@ -12,5 +12,5 @@ new CdkStack(app, 'CdkStack', {
     account: process.env.CDK_DEFAULT_ACCOUNT, 
     region: process.env.CDK_DEFAULT_REGION 
   },
-  cognitoUserPoolId: "us-east-1_h4kleBnHZ" // replace with react/src/aws-exports.js:aws_user_pools_id
+  cognitoUserPoolId: "" // replace with react/src/aws-exports.js:aws_user_pools_id
 });
