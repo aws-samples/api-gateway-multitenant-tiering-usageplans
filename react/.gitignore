@@ -22,6 +22,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+src/aws-exports.js
+src/config.json
+
 amplify/
 
 #amplify-do-not-edit-begin

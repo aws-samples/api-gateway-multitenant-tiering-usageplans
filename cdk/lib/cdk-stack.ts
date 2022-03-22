@@ -7,6 +7,8 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
 import { UserPool } from 'aws-cdk-lib/aws-cognito';
+import * as kms from 'aws-cdk-lib/aws-kms';
+import * as logs from 'aws-cdk-lib/aws-logs';
 const path = require('path');
 
 interface PlanData {
@@ -62,12 +64,19 @@ export class CdkStack extends Stack {
   constructor(scope: Construct, id: string, props: CdkStackProps) {
     super(scope, id, props);
 
+    const encryptionKey = new kms.Key(this, 'Key', {
+      enableKeyRotation: true,
+    });
+
     // DynamoDB Table for Usage Plans and metadata
     const plans = new dynamodb.Table(this, 'TieredAPI_Plans', {
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       readCapacity: 1,
       writeCapacity: 1,
       removalPolicy: RemovalPolicy.DESTROY,
+      pointInTimeRecovery: true, // best practice
+      encryption: dynamodb.TableEncryption.CUSTOMER_MANAGED,
+      encryptionKey, // This will be exposed as table.encryptionKey
     });
 
     // DynamoDB Table for API Keys and metadata
@@ -76,6 +85,9 @@ export class CdkStack extends Stack {
       readCapacity: 1,
       writeCapacity: 1,
       removalPolicy: RemovalPolicy.DESTROY,
+      pointInTimeRecovery: true, // best practice
+      encryption: dynamodb.TableEncryption.CUSTOMER_MANAGED,
+      encryptionKey, // This will be exposed as table.encryptionKey
     });
 
     // Policy that allows basic CRUD on new DynamoDB tables (and logging)
@@ -141,6 +153,7 @@ export class CdkStack extends Stack {
       runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'health_check.handler',
       code: lambda.Code.fromAsset('../lambda'),
+      deadLetterQueueEnabled: true,
     });
 
     // Lambda for basic health check, this will stay unprotected
@@ -148,7 +161,7 @@ export class CdkStack extends Stack {
       runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'get_data.handler',
       code: lambda.Code.fromAsset('../lambda'),
-
+      deadLetterQueueEnabled: true,
     });
 
     // getPlans   
@@ -160,7 +173,8 @@ export class CdkStack extends Stack {
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }
+      },
+      deadLetterQueueEnabled: true,
     });
 
     // getPlan   
@@ -172,7 +186,8 @@ export class CdkStack extends Stack {
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }
+      }, 
+      deadLetterQueueEnabled: true,
     });
 
     // getKeys   
@@ -184,7 +199,8 @@ export class CdkStack extends Stack {
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }
+      }, 
+      deadLetterQueueEnabled: true,
     });
 
     // createKey  
@@ -196,7 +212,8 @@ export class CdkStack extends Stack {
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }
+      }, 
+      deadLetterQueueEnabled: true,
     });
 
     // getKey    
@@ -208,7 +225,8 @@ export class CdkStack extends Stack {
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }
+      }, 
+      deadLetterQueueEnabled: true,
     });
 
     // updateKey 
@@ -220,7 +238,8 @@ export class CdkStack extends Stack {
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }
+      }, 
+      deadLetterQueueEnabled: true,
     });
 
     // deleteKey 
@@ -232,15 +251,24 @@ export class CdkStack extends Stack {
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }
+      }, 
+      deadLetterQueueEnabled: true,
     });
+
+    const logGroup = new logs.LogGroup(this, "DevLogs");
 
     // Create the whole REST API Gateway
     const apigw = new apigateway.RestApi(this, "multitenantApi", {
       defaultCorsPreflightOptions: { // this is useful for debugging as the react app's origin may be localhost. Reconsider for production.
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS // this is also the default
-      }
+      }, 
+      deployOptions: { 
+        cachingEnabled: false, // Suggest true for production systems
+        tracingEnabled: false, // Suggest true for production/development systems.
+        accessLogDestination: new apigateway.LogGroupLogDestination(logGroup),
+        accessLogFormat: apigateway.AccessLogFormat.clf(),
+      },
     });
 
     // This resource stays unprotected for demonstration purposes
@@ -362,10 +390,10 @@ export class CdkStack extends Stack {
             ]
           }
         },
-        physicalResourceId: PhysicalResourceId.of('seedPlansDb') // Use the token returned by the call as physical id
+        physicalResourceId: PhysicalResourceId.of('seedPlansDb'), // Use the token returned by the call as physical id
       },
       policy: AwsCustomResourcePolicy.fromSdkCalls({
-        resources: AwsCustomResourcePolicy.ANY_RESOURCE,
+        resources: [plans.tableArn, keys.tableArn],
       }),
     })
 
