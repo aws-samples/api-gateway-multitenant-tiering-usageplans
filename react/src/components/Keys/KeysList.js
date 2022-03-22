@@ -188,7 +188,7 @@ export default function KeysList({ user, setNotifications }) {
             </SpaceBetween>
           }
         >
-          Usage Keys
+          API Keys
         </Header>
       }
       loading={isLoading}

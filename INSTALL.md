@@ -3,8 +3,8 @@
 ## 1. Prerequisites
 
 1. AWS Account
-2. AWS CLI configured and stalled (or Cloud9)
-3. AWS CDK installed (version 2.12.0 or better)
+2. [AWS CLI](https://aws.amazon.com/cli/) configured and installed (or [AWS Cloud9](https://aws.amazon.com/cloud9/))
+3. [AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html) installed (version 2.12.0 or later)
 3. Node.js installed
 
 ## 2. AWS Amplify
@@ -53,25 +53,30 @@ amplify push
 
 The deployment may take a few minutes. 
 
-### 2.c. Testing the frontend.
+### 2.c. Testing the frontend
 
-The react application comes with a development server that can be run locally. Create a file, `${TOP}/react/src/config.json`, with the following contents 
+Let's start with installing packages for the react application
+```bash
+npm install
+```
+
+The react application comes with a development server that can be run locally. Review `${TOP}/react/src/config.json` for configuration of the local environment
 ```json
 {
   "USE_LOCAL_API": true,
-  "LOCAL_API_BASE": "http://localhost:5000",
+  "LOCAL_API_BASE": "http://localhost:5100",
   "REST_API_BASE": ""
 }
 ```
 We'll return to setting `REST_API_BASE` later, after the backend is installed via CDK.
 
 
-Now in one terminal, start the backend
+Now in one terminal, start the local API backend. `dev-backend` script is defined in `${TOP}/react/package.json` and uses port `5100` to run a local json-server to act as local API for testing. 
 ```bash
 npm run dev-backend
 ```
 
-In a second, start the react server
+In a second terminal, start the react server for frontend. We are using the default port `3000`
 ```bash
 npm start
 ```
@@ -80,17 +85,23 @@ Directing your browser to `http://localhost:3000`, the following login screen sh
 
 ![Amplify Login Screen](/assets/images/amplify-login.png)
 
-After creating a login with Cognito, the application should show reasonable data. 
+Your Amazon Cognito User Pool created earlier by Amplify will be empty and you will need to sign up a user to access the frontend.
+
+![Amplify Create Account](assets/images/amplify-create.png)
+
+Click on Create Account tab and sign up using your email address and set password (minimum 8 characters). You will receive an email with one time code to verify email address to complete sign-up as user in your Amazon Cognito User Pool.
+
+After creating a login with Cognito, the application will show the sample data from local API server. You can also review sample data in `${TOP}/react/db.json`.
 
 ![Sample Application with sample data](/assets/images/react-local-server.png)
 
 ## 3. The CDK
 
-Most of the backend infrastructure is built using the AWS CDK in TypeScript.  If you don't already have TypeScript 3.8 or later, install it using `npm`.  Before running the CDK, there are a few key pieces of information that need to be copied over from Amplify's build.  Primarily the Cognito deployment because it needs to be used as an authorizer for parts of API Gateway.
+Most of the backend infrastructure is built using the AWS CDK in TypeScript.  If you don't already have TypeScript 3.8 or later, install it using `npm`.  Before running the CDK, there are a few key pieces of information that need to be copied over from Amplify's build.  Primarily the Cognito deployment because it needs to be used as an authorizer for parts of Amazon API Gateway.
 
 ### 3.1 Find the Cognito User Pool ARN
 
-Look in `${TOP}/react/src/aws-export.js` for the value of the `aws_user_pools_id`.  Assign the same value to `cognitoUserPoolId` in `${TOP}/cdk/bin/cdk.ts`.
+Open `${TOP}/react/src/aws-export.js` and look for the value of `aws_user_pools_id`.  Copy the value to `cognitoUserPoolId` in `${TOP}/cdk/bin/cdk.ts`.
 
 ### 3.2 Deploy CDK
 
@@ -105,23 +116,22 @@ cdk bootstrap # may be able to skip this if you've used CDK before and infrastru
 
 cdk deploy
 ```
-### 3.3 Update the React App
+### 3.3 Update the React App to use Amazon API Gateway endpoint
 
-After the `cdk deploy` command completes from the previous step, you should see in the last few lines of output mention of a multitenantApiEndpoint.  It will be in the form of `https://${id}.execute-api.${AWS)_REGION}/amazonaws.com/prod`.  Take that value and set that to the `REST_API_BASE` in `${TOP}/react/src/config.json`.  Also set `USE_LOCAL_API` to `false`.
+After the `cdk deploy` command completes from the previous step, you should see in the last few lines of output mention of a multitenantApiEndpoint.  It will be in the form of `https://${id}.execute-api.${AWS)_REGION}/amazonaws.com/prod`.  Copy the value and set it to the `REST_API_BASE` in `${TOP}/react/src/config.json`.  Also update `USE_LOCAL_API` value to `false`.
 
-This will cause the react application to contact the API Gateway instead of the local development server.
+This will update the react application to use the Amazon API Gateway instead of the local development server.
 
 ### 3.4 Run the React App
 
 ```bash
 cd ${TOP}/react
-npm install
 npm start
 ```
 
-### 3.5 Open the App in a Browser, Create an account
+### 3.5 Open the App in a Browser and Login
+![Amplify Login Screen](/assets/images/amplify-login.png)
 
-![Amplify Create Account](assets/images/amplify-create.png)
-
+Navigate to `http://localhost:3000` in your browser to access updated React frontend. You can login use an account you created earlier step.
 
 Continue to the [WALKTHROUGH](./WALKTHROUGH.md)
