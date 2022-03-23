@@ -456,9 +456,17 @@ export class CdkStack extends Stack {
         },
         physicalResourceId: PhysicalResourceId.of('seedPlansDb'), // Use the token returned by the call as physical id
       },
-      policy: AwsCustomResourcePolicy.fromSdkCalls({
-        resources: [plans.tableArn, keys.tableArn],
-      }),
+      policy: {
+        statements: [allowKMSKeyUse, new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "dynamodb:PutItem",
+            "dynamodb:BatchWriteItem",
+            "dynamodb:DescribeTable"
+          ],
+          resources: [plans.tableArn, keys.tableArn]
+        })]
+      },
     })
 
   }
