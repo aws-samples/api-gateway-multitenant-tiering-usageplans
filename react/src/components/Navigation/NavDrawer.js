@@ -9,7 +9,7 @@ export default function NavDrawer() {
   return (
     <SideNavigation
       activeHref={activeHref}
-      // header={{ text: "API Gateway UsagePlan Demo" }}
+      // header={{ text: "Amazon API Gateway UsagePlan Demo" }}
       items={[
         { type: "link", text: "Dashboard", href: "/" },
         { type: "link", text: "Usage Plans", href: "/plans" },

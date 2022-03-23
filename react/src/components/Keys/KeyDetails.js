@@ -122,7 +122,7 @@ export default function KeyDetails({ user, setNotifications }) {
       <Container
         header={
           <Header variant="h2">
-            {keyId ? "Edit API Key" : "Create API Key"}
+            {keyId ? "Update API Key" : "Purchase API Key"}
           </Header>
         }
       >

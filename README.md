@@ -1,19 +1,20 @@
-# Multi-Tenant Tiering with API Gateway and Usage Plans
+# Applying tiering stragies to manage throttling in a aulti-tenant system with Amazon API Gateway Usage Plans
+## Overview
 
-## Summary
+Amazon API Gateway Usage Plans and API Keys help implement solutions for tiering strategy, managing noisy neighbor effects in a multi-tenant environment. Thorttling and quotas help manage and minimize potential impacts by one tenant's ability to affect other tenants experience commonly known as noisy neighbour.
 
 This repository contains a working demo of throttling REST APIs in Amazon API Gateway in a multi-tenant situation. Throttling is an important strategy to protect backend services from excessive load. API Gateway offers the ability to apply throttling on a per-tenant basis, so that all tentants get their fair share. 
 
 This code sample implements a tiered multi-tenant strategy which is a practical consideration at large scale, because the number API Keys available per account per regioned is subject to [quota limits](https://docs.aws.amazon.com/apigateway/latest/developerguide/limits.html) and may be significantly less than the total number of tentants. 
 
-## Cloud Architecture
+## Solution Architecture
 ![Workshop Architecture](/assets/images/architecture2.png)
 
 ## Description
 
-When deployed, the user has a sample web application that shows how customers can create accounts and "purchase" API Keys at different service tiers. And they will be able to call the REST API that is protected by an API Key and see behavior if they trigger throttling.
+The sample web application provides administrative fuctions on how customers can sign up and "purchase" API Keys at different service tiers. The sample app also allows users to call the REST API proctected by API Key to test and observe throttle and quota behaviour with Usage Planns.
 
-The web app invokes REST APIs on a single AWS API Gateway deployment. Calls that perform CRUD operations on API Keys are grouped into `/admin/*` and require authentication with Amazon Cognito. A single REST API, `GET /api/data` is protected by the Usage Plan.  
+The web app invokes REST APIs on a single Amazon API Gateway deployment. Calls that perform CRUD operations on API Keys are grouped into `/admin/*` and require authentication with Amazon Cognito. A single REST API, `GET /api/data` is protected by the Usage Plan.  
 
 ## Installation 
 See [INSTALL](./INSTALL.md)
@@ -24,7 +25,7 @@ See [WALKTHROUGH](./WALKTHROUGH.md)
 
 
 ## Enable Pooling
-See [ENABLE_POOLING](./ENABLE_POOLING.md)
+See [POOLING_AKI_KEYS](./POOLING_AKI_KEYS.md)
 
 ## Clean Up
 Removing the deployed assets from AWS account is done with the followig commands
@@ -39,7 +40,7 @@ cd ${TOP}/react
 amplify delete
 ```
 
-Note that the default behavior of `cdk destroy` is to retain certain stateful resources, such as DynamoDB Tables. As this is a code sample for training only, the CDK scripts have an explicit `removalPolicy` to override that default behavior and remove the DynamoDB Tables as well. 
+Note that the default behavior of `cdk destroy` is to retain certain stateful resources, such as Amazon DynamoDB Tables. As this is a code sample for training only, the CDK scripts have an explicit `removalPolicy` to override that default behavior and remove the Amazon DynamoDB Tables as well. 
 
 ## Security
 

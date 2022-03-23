@@ -1,7 +1,7 @@
 # Walkthrough
 
 ## About this page: 
-This document assumes that you've already successfully built the sample code (see [INSTALL.md](INSTALL.md)).  This walks through the basic functionality of the sample application.  It is a very simple UI to vend API Keys and test them. At the end of this page, you should have a good idea how API Keys work, and been able to demonstrate how API Gateway can switch from HTTP 200 responses when things are allowed, to HTTP 429 responses when API Gateway is throttling traffic. 
+This document assumes that you've already successfully built the sample code (see [INSTALL.md](INSTALL.md)).  This walks through the basic functionality of the sample application.  It is a very simple UI to vend API Keys and test them. At the end of this page, you should have a good idea how API Keys work, and be able to demonstrate how Amazon API Gateway can switch from HTTP 200 responses when things are allowed, to HTTP 429 responses when Amazon API Gateway is throttling traffic. 
 
 ## Getting Acquainted with the UI
 
@@ -9,11 +9,11 @@ After logging in the first time, the application looks like this, with four Usag
 
 ![Dashboard with 4 Usage Plans and no Keys](assets/images/walkthru-dash.png)
 
-Choosing `Usage Plans` on the side panel, we can get more detail about the Usage Plans. In this example, they have different quotas and throttle characteristics. 
+Navigate to `Usage Plans` on the side panel, we can get more detail about the Usage Plans available. In this example, they have different quotas and throttle characteristics. 
 
 ![List of Usage Plans](assets/images/walkthru-plans.png)
 
-Create a Key from the `Test Plan` as shown below. This particular plan is useful for demonstration purposes because the quota is very low: 20 calls per day.
+Purchase a Key from the `Test Plan` by click on `Purchase Key` button as shown below. This particular Usage Plan is useful for demonstration purposes because the quota is very low: 20 calls per day.
 
 ![API Key Creation Form](assets/images/walktrhu-newKey.png)
 
@@ -44,7 +44,7 @@ An exception for this quota can be granted via the AWS Console
 
 ## Other Experiments
 
-1. Log out, create a second login with a different email, and create a new API Key with the same UsagePlan.  You should be able to use that one until API Gateway throttles that independently.
+1. Log out, create a second login with a different email, and create a new API Key with the same UsagePlan.  You should be able to use that one until Amazon API Gateway throttles that independently.
 
 2. You can also try exercising the API on the command line using cURL 
 ```bash
@@ -52,6 +52,6 @@ curl -H "X-Api-key: <UUID> " https://<API_GATEWAY>.execute-api.<AWS_REGION>.amaz
 ```
 Where `<UUID>`, `<API_GATEWAY>` and `<AWS_REGION>` can be discovered in the API Test panel of the Dashboard.
 
-3. For the really curious, try loadtesting one of the other usage plans.  API Gateway will throttle based on best-effort, so don't be suprised if a few extra requests get through on some experiements.
+3. For the really curious, try loadtesting one of the other usage plans. Amazon API Gateway will throttle based on best-effort, so don't be suprised if a few extra requests get through on some experiements.
 ## Next
-Continue to the [ENABLE_POOLING](./ENABLE_POOLING.md)
+Continue to the [POOLING_AKI_KEYS](./POOLING_AKI_KEYS.md)
