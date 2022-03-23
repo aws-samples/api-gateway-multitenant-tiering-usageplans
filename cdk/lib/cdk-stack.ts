@@ -7,6 +7,8 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
 import { UserPool } from 'aws-cdk-lib/aws-cognito';
+import * as kms from 'aws-cdk-lib/aws-kms';
+import * as logs from 'aws-cdk-lib/aws-logs';
 const path = require('path');
 
 interface PlanData {
@@ -62,12 +64,19 @@ export class CdkStack extends Stack {
   constructor(scope: Construct, id: string, props: CdkStackProps) {
     super(scope, id, props);
 
+    const encryptionKey = new kms.Key(this, 'Key', {
+      enableKeyRotation: true,
+    });
+
     // DynamoDB Table for Usage Plans and metadata
     const plans = new dynamodb.Table(this, 'TieredAPI_Plans', {
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       readCapacity: 1,
       writeCapacity: 1,
       removalPolicy: RemovalPolicy.DESTROY,
+      pointInTimeRecovery: true, // best practice
+      encryption: dynamodb.TableEncryption.CUSTOMER_MANAGED,
+      encryptionKey, // This will be exposed as table.encryptionKey
     });
 
     // DynamoDB Table for API Keys and metadata
@@ -76,71 +85,139 @@ export class CdkStack extends Stack {
       readCapacity: 1,
       writeCapacity: 1,
       removalPolicy: RemovalPolicy.DESTROY,
+      pointInTimeRecovery: true, // best practice
+      encryption: dynamodb.TableEncryption.CUSTOMER_MANAGED,
+      encryptionKey, // This will be exposed as table.encryptionKey
     });
 
-    // Policy that allows basic CRUD on new DynamoDB tables (and logging)
-    const allowDynamoMods = new iam.Policy(this, "TieredAPI_LambdaPolicy", {
+    const allowKMSKeyUse = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        "kms:Decrypt"
+      ],
+      resources: [encryptionKey.keyArn]
+
+    })
+
+    const apiGatewayPolicy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        "apigateway:DELETE",
+        "apigateway:PATCH",
+        "apigateway:POST",
+        "apigateway:PUT",
+        "apigateway:GET"
+      ],
+      resources: [
+        "arn:aws:apigateway:*::/apikeys/*",
+        "arn:aws:apigateway:*::/apikeys",
+        "arn:aws:apigateway:*::/usageplans/*/keys/*",
+        "arn:aws:apigateway:*::/usageplans/*/keys",
+        "arn:aws:apigateway:*::/tags/*"
+      ]
+    })
+
+    // Policy that allows basic Reads on new DynamoDB tables (and logging)
+    const allowDDBReadsAndKMSPolicy = new iam.Policy(this, "TieredAPI_Read_LambdaPolicy", {
+      statements: [
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "dynamodb:GetItem",
+            "dynamodb:Query",
+            "dynamodb:Scan",
+          ],
+          resources: [plans.tableArn, keys.tableArn]
+        }),
+        allowKMSKeyUse,
+        apiGatewayPolicy,
+      ]
+    })
+
+    // Policy that allows basic Create on new DynamoDB tables (and logging)
+    const allowDDBCreateAndKMSPolicy = new iam.Policy(this, "TieredAPI_Create_LambdaPolicy", {
+      statements: [
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "dynamodb:PutItem",
+            "dynamodb:GetItem",
+          ],
+          resources: [plans.tableArn, keys.tableArn]
+        }),
+        allowKMSKeyUse,
+        apiGatewayPolicy,
+      ]
+    })
+
+    // Policy that allows basic Create on new DynamoDB tables (and logging)
+    const allowDDBDeleteAndKMSPolicy = new iam.Policy(this, "TieredAPI_Delete_LambdaPolicy", {
       statements: [
         new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: [
             "dynamodb:DeleteItem",
             "dynamodb:GetItem",
-            "dynamodb:PutItem",
-            "dynamodb:Query",
-            "dynamodb:Scan",
-            "dynamodb:UpdateItem"
           ],
           resources: [plans.tableArn, keys.tableArn]
         }),
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: [
-            "apigateway:GET",
-          ],
-          resources: ["*"]
-        }),
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: [
-            "apigateway:DELETE",
-            "apigateway:PATCH",
-            "apigateway:POST",
-            "apigateway:PUT"
-          ],
-          resources: [
-            "arn:aws:apigateway:*::/apikeys/*",
-            "arn:aws:apigateway:*::/apikeys",
-            "arn:aws:apigateway:*::/usageplans/*/keys/*",
-            "arn:aws:apigateway:*::/usageplans/*/keys",
-            "arn:aws:apigateway:*::/tags/*"
-          ]
-        }),
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: [
-            "logs:CreateLogGroup",
-            "logs:CreateLogStream",
-            "logs:PutLogEvents"
-          ],
-          resources: ["*"]
+        allowKMSKeyUse,
+        apiGatewayPolicy,
+      ]
+    })
 
+    // Policy that allows basic Create on new DynamoDB tables (and logging)
+    const allowDDBUpdateAndKMSPolicy = new iam.Policy(this, "TieredAPI_Update_LambdaPolicy", {
+      statements: [
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "dynamodb:UpdateItem",
+            "dynamodb:GetItem",
+          ],
+          resources: [plans.tableArn, keys.tableArn]
         }),
+        allowKMSKeyUse,
+        apiGatewayPolicy,
       ]
     })
 
     // Role for Lambda to assume that has new policy
-    const lambdaRole = new iam.Role(this, "TieredAPI_LambdaRole", {
+    const lambdaCreateRole = new iam.Role(this, "TieredAPI_Create_LambdaRole", {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
-      description: 'Assumed by Lambdas',
-      inlinePolicies: { allowDynamoMods: allowDynamoMods.document }
+      description: 'Assumed by Lambda Functions',
+      inlinePolicies: { allowDDBCreateAndKMSPolicy: allowDDBCreateAndKMSPolicy.document },
+      managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole")],
     })
+
+    const lambdaReadRole = new iam.Role(this, "TieredAPI_Read_LambdaRole", {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+      description: 'Assumed by Lambda Functions',
+      inlinePolicies: { allowDDBReadsAndKMSPolicy: allowDDBReadsAndKMSPolicy.document },
+      managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole")],
+    })
+
+    const lambdaUpdateRole = new iam.Role(this, "TieredAPI_Update_LambdaRole", {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+      description: 'Assumed by Lambda Functions',
+      inlinePolicies: { allowDDBUpdateAndKMSPolicy: allowDDBUpdateAndKMSPolicy.document },
+      managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole")],
+    })
+
+    const lambdaDeleteRole = new iam.Role(this, "TieredAPI_Delete_LambdaRole", {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+      description: 'Assumed by Lambda Functions',
+      inlinePolicies: { allowDDBDeleteAndKMSPolicy: allowDDBDeleteAndKMSPolicy.document },
+      managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole")],
+    })
+
 
     // Lambda for basic health check, this will stay unprotected
     const healthcheckLambda = new lambda.Function(this, 'healthCheck', {
       runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'health_check.handler',
       code: lambda.Code.fromAsset('../lambda'),
+      deadLetterQueueEnabled: true,
     });
 
     // Lambda for basic health check, this will stay unprotected
@@ -148,7 +225,7 @@ export class CdkStack extends Stack {
       runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'get_data.handler',
       code: lambda.Code.fromAsset('../lambda'),
-
+      deadLetterQueueEnabled: true,
     });
 
     // getPlans   
@@ -156,11 +233,12 @@ export class CdkStack extends Stack {
       runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'get_plans.handler',
       code: lambda.Code.fromAsset('../lambda'),
-      role: lambdaRole,
+      role: lambdaReadRole,
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }
+      },
+      deadLetterQueueEnabled: true,
     });
 
     // getPlan   
@@ -168,11 +246,12 @@ export class CdkStack extends Stack {
       runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'get_plan.handler',
       code: lambda.Code.fromAsset('../lambda'),
-      role: lambdaRole,
+      role: lambdaReadRole,
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }
+      }, 
+      deadLetterQueueEnabled: true,
     });
 
     // getKeys   
@@ -180,11 +259,12 @@ export class CdkStack extends Stack {
       runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'get_keys.handler',
       code: lambda.Code.fromAsset('../lambda'),
-      role: lambdaRole,
+      role: lambdaReadRole,
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }
+      }, 
+      deadLetterQueueEnabled: true,
     });
 
     // createKey  
@@ -192,11 +272,12 @@ export class CdkStack extends Stack {
       runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'create_key.handler',
       code: lambda.Code.fromAsset('../lambda'),
-      role: lambdaRole,
+      role: lambdaCreateRole,
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }
+      }, 
+      deadLetterQueueEnabled: true,
     });
 
     // getKey    
@@ -204,11 +285,12 @@ export class CdkStack extends Stack {
       runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'get_key.handler',
       code: lambda.Code.fromAsset('../lambda'),
-      role: lambdaRole,
+      role: lambdaReadRole,
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }
+      }, 
+      deadLetterQueueEnabled: true,
     });
 
     // updateKey 
@@ -216,11 +298,12 @@ export class CdkStack extends Stack {
       runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'update_key.handler',
       code: lambda.Code.fromAsset('../lambda'),
-      role: lambdaRole,
+      role: lambdaUpdateRole,
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }
+      }, 
+      deadLetterQueueEnabled: true,
     });
 
     // deleteKey 
@@ -228,19 +311,28 @@ export class CdkStack extends Stack {
       runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'delete_key.handler',
       code: lambda.Code.fromAsset('../lambda'),
-      role: lambdaRole,
+      role: lambdaDeleteRole,
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }
+      }, 
+      deadLetterQueueEnabled: true,
     });
+
+    const logGroup = new logs.LogGroup(this, "DevLogs");
 
     // Create the whole REST API Gateway
     const apigw = new apigateway.RestApi(this, "multitenantApi", {
       defaultCorsPreflightOptions: { // this is useful for debugging as the react app's origin may be localhost. Reconsider for production.
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS // this is also the default
-      }
+      }, 
+      deployOptions: { 
+        cachingEnabled: false, // Suggest true for production systems
+        tracingEnabled: false, // Suggest true for production/development systems.
+        accessLogDestination: new apigateway.LogGroupLogDestination(logGroup),
+        accessLogFormat: apigateway.AccessLogFormat.clf(),
+      },
     });
 
     // This resource stays unprotected for demonstration purposes
@@ -362,11 +454,19 @@ export class CdkStack extends Stack {
             ]
           }
         },
-        physicalResourceId: PhysicalResourceId.of('seedPlansDb') // Use the token returned by the call as physical id
+        physicalResourceId: PhysicalResourceId.of('seedPlansDb'), // Use the token returned by the call as physical id
       },
-      policy: AwsCustomResourcePolicy.fromSdkCalls({
-        resources: AwsCustomResourcePolicy.ANY_RESOURCE,
-      }),
+      policy: {
+        statements: [allowKMSKeyUse, new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "dynamodb:PutItem",
+            "dynamodb:BatchWriteItem",
+            "dynamodb:DescribeTable"
+          ],
+          resources: [plans.tableArn, keys.tableArn]
+        })]
+      },
     })
 
   }
