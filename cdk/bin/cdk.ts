@@ -21,10 +21,15 @@ if (apiStack.node.tryGetContext('AWS_SOLUTIONS_CHECK')) {
   cdk.Aspects.of(app).add(new AwsSolutionsChecks());
   NagSuppressions.addStackSuppressions(apiStack,
     [
-      { id: 'AwsSolutions-APIG4', reason: 'CORS OPTIONS Method' }
-      , { id: 'AwsSolutions-APIG2', reason: 'Request validation' }
-      , { id: 'AwsSolutions-COG4', reason: 'CORS OPTIONS Method' }
-      , { id: 'AwsSolutions-IAM4', reason: 'Manged IAM policy attachment' }
-      , { id: 'AwsSolutions-IAM5', reason: 'Permission to usage plan and API keys' }
+      { id: 'AwsSolutions-APIG4', reason: 'Endpoints set to no authorizer as it is serving the required HEADERS for CORS correctly. It is an auto-generated endpoint by API Gateway with pre-flight options.' }
+      , { id: 'AwsSolutions-COG4', reason: 'Endpoints set to no authorizer as it is serving the required HEADERS for CORS correctly. It is an auto-generated endpoint by API Gateway with pre-flight options.' }
+      , { id: 'AwsSolutions-COG3', reason: 'Cognito User Pool with custom password policy and MFA required. This is sample code and Advanced security mode not set.' }
+      , { id: 'AwsSolutions-APIG2', reason: 'Backend integration Lambda will validate request input and is this is sample code only.' }
+      , { id: 'AwsSolutions-IAM4', reason: 'Managed policy only permits Lambda function to write to CloudWatch' }
+      , { id: 'AwsSolutions-IAM5', reason: 'The wildcard permissions used by Lambda functions to manage api keys, usage plans, tags for API Gateway' }
     ])
+    NagSuppressions.addStackSuppressions(authStack,
+      [
+        { id: 'AwsSolutions-COG3', reason: 'Cognito User Pool with custom password policy and MFA required. This is sample code and Advanced security mode not set.' }
+      ])
 }
