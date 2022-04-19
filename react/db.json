@@ -50,8 +50,5 @@
   ],
   "api": {
     "items": []
-  },
-  "healthcheck": {
-    "status": "OK"
   }
 }

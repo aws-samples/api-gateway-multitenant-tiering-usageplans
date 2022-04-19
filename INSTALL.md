@@ -9,11 +9,11 @@
 
 ## 2. AWS Amplify
 
-As the AWS Amplify Construct for CDK is in preview, we will use the Amplify CLI instead. Note, if you are using SSO instead of IAM Users to access your account, you will want to run `aws configure sso` from the commandline first.
+As the AWS Amplify Construct for CDK is in preview, we will use the Amplify CLI instead. Note, if you are using SSO instead of IAM Users to access your account, you will want to run `aws configure sso` from the command line first.
 
 ### 2.a. Install and Configure Amplify CLI
 
-This creates an AmplifyAdministrator IAM User.  Note that the commandline argument will launch the AWS Console
+This creates an Amplify Administrator IAM User.  Note that the command line argument will launch the AWS Console
 
 ```bash
 npm install -g @aws-amplify/cli
@@ -26,7 +26,7 @@ amplify configure
   # chose a profile name that the AmplifyCLI will use for this new IAM user
 ```
 
-### 2.b. Use Amplify CLI to configure resources fo the web application
+### 2.b. Use Amplify CLI to configure resources for the web application
 
 Basic initialization 
 ```bash
@@ -69,7 +69,6 @@ The react application comes with a development server that can be run locally. R
 }
 ```
 We'll return to setting `REST_API_BASE` later, after the backend is installed via CDK.
-
 
 Now in one terminal, start the local API backend. `dev-backend` script is defined in `${TOP}/react/package.json` and uses port `5100` to run a local json-server to act as local API for testing. 
 ```bash
@@ -135,3 +134,5 @@ npm start
 Navigate to `http://localhost:3000` in your browser to access updated React frontend. You can login use an account you created earlier step.
 
 Continue to the [WALKTHROUGH](./WALKTHROUGH.md)
+
+
