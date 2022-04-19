@@ -20,35 +20,35 @@ exports.handler = function(event, context, callback) {
     callback(null,internalServerErrorResponse());
     return;
   }
-  const jwt = parseJwt(token)
+  const jwt = parseJwt(token);
+  const item = JSON.parse(event.body);
   console.log('JWT payload: ', JSON.stringify(jwt, null, 2));
   
-  updateKeyById(keysTable, event.pathParameters.id, jwt, callback); 
+  updateKeyById(keysTable, item, jwt, callback); 
 }
 
 /**
  * PUT /admin/keys/{id}
  */
- function updateKeyById(tableName, key, jwt, callback) {
-
+ function updateKeyById(tableName, item, jwt, callback) {
   dynamo.updateItem({
       TableName: tableName,
-      Item: {
-          "id": { S: key.id },
-          "planId": { S: key.planId },
-          "name": { S: key.name },
-          "description": { S: key.description }, 
-          "enabled" : { BOOL: key.enabled }
-        },  
-      ConditionExpression : "#owner = :o",
+      Key: {"id": { S: item.id }},
       ExpressionAttributeNames: {
-          "#owner": "owner"
+          "#N": "name",
+          "#D": "description",
+          "#E": "enabled",
+          "#O": "owner"
       },
       ExpressionAttributeValues: {
-         ":o": {
-              S: jwt.sub
-          }
-      }
+          ":n": {S: item.name},
+          ":d": {S: item.description},
+          ":e": {BOOL: item.enabled},
+          ":o": { S: jwt.sub }
+      },
+      UpdateExpression: "SET #N = :n, #D = :d, #E = :e",
+      ConditionExpression : "#O = :o",
+      
   }).promise().then((data) => {
       console.log("Dynamo data: ",JSON.stringify(data.Item, null, 2));
       const response = goodResponse(JSON.stringify(AWS.DynamoDB.Converter.unmarshall(data.Item)));

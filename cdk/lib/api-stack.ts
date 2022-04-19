@@ -1,6 +1,6 @@
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { RemovalPolicy } from 'aws-cdk-lib'
+import { RemovalPolicy } from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -9,6 +9,7 @@ import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from '
 import { UserPool } from 'aws-cdk-lib/aws-cognito';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import { NagSuppressions } from 'cdk-nag';
 const path = require('path');
 
 interface PlanData {
@@ -36,7 +37,7 @@ function createUsagePlan(gw: apigateway.RestApi, plan: PlanData): apigateway.Usa
       offset: plan.quotaOffset,
       period: plan.period
     },
-    apiStages: [ { stage: gw.deploymentStage } ]
+    apiStages: [{ stage: gw.deploymentStage }]
   });
 }
 
@@ -56,12 +57,12 @@ function createDynamoSeed(id: string, plan: PlanData): any {
 }
 
 // make cognitoUserPoolId a required prop
-export interface CdkStackProps extends StackProps {
+export interface ApiStackProps extends StackProps {
   cognitoUserPoolId: string;
 }
 
-export class CdkStack extends Stack {
-  constructor(scope: Construct, id: string, props: CdkStackProps) {
+export class ApiStack extends Stack {
+  constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
     const encryptionKey = new kms.Key(this, 'Key', {
@@ -109,13 +110,13 @@ export class CdkStack extends Stack {
         "apigateway:GET"
       ],
       resources: [
-        "arn:aws:apigateway:*::/apikeys/*",
-        "arn:aws:apigateway:*::/apikeys",
-        "arn:aws:apigateway:*::/usageplans/*/keys/*",
-        "arn:aws:apigateway:*::/usageplans/*/keys",
-        "arn:aws:apigateway:*::/tags/*"
+        `arn:aws:apigateway:${props.env?.region}::/apikeys/*`,
+        `arn:aws:apigateway:${props.env?.region}::/apikeys`,
+        `arn:aws:apigateway:${props.env?.region}::/usageplans/*/keys/*`,
+        `arn:aws:apigateway:${props.env?.region}::/usageplans/*/keys`,
+        `arn:aws:apigateway:${props.env?.region}::/tags/*`
       ]
-    })
+    });
 
     // Policy that allows basic Reads on new DynamoDB tables (and logging)
     const allowDDBReadsAndKMSPolicy = new iam.Policy(this, "TieredAPI_Read_LambdaPolicy", {
@@ -211,21 +212,12 @@ export class CdkStack extends Stack {
       managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole")],
     })
 
-
-    // Lambda for basic health check, this will stay unprotected
-    const healthcheckLambda = new lambda.Function(this, 'healthCheck', {
-      runtime: lambda.Runtime.NODEJS_14_X,
-      handler: 'health_check.handler',
-      code: lambda.Code.fromAsset('../lambda'),
-      deadLetterQueueEnabled: true,
-    });
-
     // Lambda for basic health check, this will stay unprotected
     const getDataLambda = new lambda.Function(this, 'getData', {
       runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'get_data.handler',
       code: lambda.Code.fromAsset('../lambda'),
-      deadLetterQueueEnabled: true,
+      deadLetterQueueEnabled: false,
     });
 
     // getPlans   
@@ -238,7 +230,7 @@ export class CdkStack extends Stack {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
       },
-      deadLetterQueueEnabled: true,
+      deadLetterQueueEnabled: false,
     });
 
     // getPlan   
@@ -250,8 +242,8 @@ export class CdkStack extends Stack {
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }, 
-      deadLetterQueueEnabled: true,
+      },
+      deadLetterQueueEnabled: false,
     });
 
     // getKeys   
@@ -263,8 +255,8 @@ export class CdkStack extends Stack {
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }, 
-      deadLetterQueueEnabled: true,
+      },
+      deadLetterQueueEnabled: false,
     });
 
     // createKey  
@@ -276,8 +268,8 @@ export class CdkStack extends Stack {
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }, 
-      deadLetterQueueEnabled: true,
+      },
+      deadLetterQueueEnabled: false,
     });
 
     // getKey    
@@ -289,8 +281,8 @@ export class CdkStack extends Stack {
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }, 
-      deadLetterQueueEnabled: true,
+      },
+      deadLetterQueueEnabled: false,
     });
 
     // updateKey 
@@ -302,8 +294,8 @@ export class CdkStack extends Stack {
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }, 
-      deadLetterQueueEnabled: true,
+      },
+      deadLetterQueueEnabled: false,
     });
 
     // deleteKey 
@@ -315,34 +307,31 @@ export class CdkStack extends Stack {
       environment: {
         PLANS_TABLE_NAME: plans.tableName,
         KEYS_TABLE_NAME: keys.tableName
-      }, 
-      deadLetterQueueEnabled: true,
+      },
+      deadLetterQueueEnabled: false,
     });
 
-    const logGroup = new logs.LogGroup(this, "DevLogs");
+    const logGroup = new logs.LogGroup(this, "MultiTenantSampleAPILogs");
 
     // Create the whole REST API Gateway
-    const apigw = new apigateway.RestApi(this, "multitenantApi", {
+    const apigw = new apigateway.RestApi(this, "MultiTenantSampleAPI", {
       defaultCorsPreflightOptions: { // this is useful for debugging as the react app's origin may be localhost. Reconsider for production.
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS // this is also the default
-      }, 
-      deployOptions: { 
+      },
+      deployOptions: {
         cachingEnabled: false, // Suggest true for production systems
         tracingEnabled: false, // Suggest true for production/development systems.
+        loggingLevel: apigateway.MethodLoggingLevel.INFO,
         accessLogDestination: new apigateway.LogGroupLogDestination(logGroup),
         accessLogFormat: apigateway.AccessLogFormat.clf(),
       },
     });
 
-    // This resource stays unprotected for demonstration purposes
-    const healthcheckResource = apigw.root.addResource('healthcheck');
-    const healthcheckApi = healthcheckResource.addMethod('GET', new apigateway.LambdaIntegration(healthcheckLambda));
-
     // All these resources are throttled and will require an API Key
     const getDataResource = apigw.root.addResource('api');
-    const getDataApi = getDataResource.addMethod('GET', new apigateway.LambdaIntegration(getDataLambda), { 
-      apiKeyRequired: true, 
+    const getDataApi = getDataResource.addMethod('GET', new apigateway.LambdaIntegration(getDataLambda), {
+      apiKeyRequired: true,
     });
 
     const userPool = UserPool.fromUserPoolId(this, 'UserPool', props.cognitoUserPoolId);
@@ -468,6 +457,5 @@ export class CdkStack extends Stack {
         })]
       },
     })
-
   }
 }

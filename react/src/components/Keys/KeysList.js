@@ -214,6 +214,6 @@ export default function KeysList({ user, setNotifications }) {
   );
 }
 
-function TablePreferences({}) {
+function TablePreferences() {
   return <CollectionPreferences> </CollectionPreferences>;
 }

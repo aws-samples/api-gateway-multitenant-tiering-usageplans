@@ -1,18 +1,18 @@
-# Applying tiering stragies to manage throttling in a aulti-tenant system with Amazon API Gateway Usage Plans
+# Applying tiering strategies to manage throttling in a multi-tenant system with Amazon API Gateway Usage Plans
 ## Overview
 
-Amazon API Gateway Usage Plans and API Keys help implement solutions for tiering strategy, managing noisy neighbor effects in a multi-tenant environment. Thorttling and quotas help manage and minimize potential impacts by one tenant's ability to affect other tenants experience commonly known as noisy neighbour.
+Amazon API Gateway Usage Plans and API Keys help implement solutions for tiering strategy, managing noisy neighbor effects in a multi-tenant environment. Throttling and quotas help manage and minimize potential impacts by one tenant's ability to affect other tenants experience commonly known as noisy neighbor.
 
-This repository contains a working demo of throttling REST APIs in Amazon API Gateway in a multi-tenant situation. Throttling is an important strategy to protect backend services from excessive load. API Gateway offers the ability to apply throttling on a per-tenant basis, so that all tentants get their fair share. 
+This repository contains a working demo of throttling REST APIs in Amazon API Gateway in a multi-tenant situation. Throttling is an important strategy to protect backend services from excessive load. API Gateway offers the ability to apply throttling on a per-tenant basis, so that all tenants get their fair share. 
 
-This code sample implements a tiered multi-tenant strategy which is a practical consideration at large scale, because the number API Keys available per account per regioned is subject to [quota limits](https://docs.aws.amazon.com/apigateway/latest/developerguide/limits.html) and may be significantly less than the total number of tentants. 
+This code sample implements a tiered multi-tenant strategy which is a practical consideration at large scale, because the number API Keys available per account per region is subject to [quota limits](https://docs.aws.amazon.com/apigateway/latest/developerguide/limits.html) and may be significantly less than the total number of tenants. 
 
 ## Solution Architecture
 ![Workshop Architecture](/assets/images/architecture2.png)
 
 ## Description
 
-The sample web application provides administrative fuctions on how customers can sign up and "purchase" API Keys at different service tiers. The sample app also allows users to call the REST API proctected by API Key to test and observe throttle and quota behaviour with Usage Planns.
+The sample web application provides administrative functions on how customers can sign up and "purchase" API Keys at different service tiers. The sample app also allows users to call the REST API protected by API Key to test and observe throttle and quota behavior with Usage Plans.
 
 The web app invokes REST APIs on a single Amazon API Gateway deployment. Calls that perform CRUD operations on API Keys are grouped into `/admin/*` and require authentication with Amazon Cognito. A single REST API, `GET /api/data` is protected by the Usage Plan.  
 
@@ -28,15 +28,14 @@ See [WALKTHROUGH](./WALKTHROUGH.md)
 See [POOLING_AKI_KEYS](./POOLING_AKI_KEYS.md)
 
 ## Clean Up
-Removing the deployed assets from AWS account is done with the followig commands
+Removing the deployed assets from AWS account is done with the following commands
 
 ```bash
-#  where TOP is root directory of the code sample
 
-cd ${TOP}/cdk
-cdk destroy
+cd cdk
+cdk destroy --all
 
-cd ${TOP}/react
+cd react
 amplify delete
 ```
 
