@@ -11,26 +11,26 @@ Although the sample code has the capacity to pool API Keys for certain usage pla
  
 First, delete all your API Keys except for one API Key in the Free Tier, and five API Keys in the Basic Tier.  The next step will turn those six keys into pools.
 
-Second, go to `${TOP}/lambdas/api_key_pools.js` and edit the file as described in the comments.   
+Second, go to `lambdas/api_key_pools.js` and edit the file as described in the comments.   
  You will need to use the AWS Console to inspect Usage Plans in the Amazon API Gateway to get the correct ID numbers.
 
 Here's a screenshot of the Amazon API Gateway from the AWS Console.  The ID for the Usage Plan called "BasicPlan" is `vexgx5` in this image, but it will be different for everyone. 
 ![see Usage Plans in the AWS Console](assets/images/AWSConsole_UsagePlans.png)
 
 
-This is a screenshot for the API Keys.  The Id for the API Key in this screenshot is `p5aqzs...`, but it will be different for each deployment. That's the value you want to enter in the  `${TOP}/lambdas/api_key_pools.js` file as well.
+This is a screenshot for the API Keys.  The Id for the API Key in this screenshot is `p5aqzs...`, but it will be different for each deployment. That's the value you want to enter in the  `lambdas/api_key_pools.js` file as well.
 ![see API Keys in the AWS Console](assets/images/AWSConsole_APIKeys.png)
 
 
 Lastly, re-deploy the lambda functions using CDK.  (CDK is intelligent enough to detect changes and deploy just the updates.)
 ```
-cd ${TOP}/cdk
+cd cdk
 cdk deploy
 ```
 
 ## What this change does
 
-When the data structure in `${TOP}/lambdas/api_key_pools.js` is empty (as it was in the initial deployment), the business logic in the `createKey` and `deleteKey` Lambda functions behave in "siloed" mode, where each request pertains to a unique key. When the data structure is populated, the Lambda functions understand that certain API Keys are pooled resources in specific Usage Plans and will share them across users.  In a production system, this could be encoded into a database query or parameter store. 
+When the data structure in `lambdas/api_key_pools.js` is empty (as it was in the initial deployment), the business logic in the `createKey` and `deleteKey` Lambda functions behave in "siloed" mode, where each request pertains to a unique key. When the data structure is populated, the Lambda functions understand that certain API Keys are pooled resources in specific Usage Plans and will share them across users.  In a production system, this could be encoded into a database query or parameter store. 
 
 ## How to verify pooling
 

@@ -2,6 +2,7 @@
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { ApiStack } from '../lib/api-stack';
+import { AuthStack } from '../lib/auth-stack';
 import { NagSuppressions, AwsSolutionsChecks } from 'cdk-nag';
 
 const app = new cdk.App();
@@ -10,10 +11,10 @@ const env = {
   account: process.env.CDK_DEFAULT_ACCOUNT,
   region: process.env.CDK_DEFAULT_REGION
 }
-
+const authStack = new AuthStack(app, 'AuthStack', {env});
 const apiStack = new ApiStack(app, 'APIStack', {
   env,
-  cognitoUserPoolId: "" // replace with react/src/aws-exports.js:aws_user_pools_id
+  cognitoUserPoolId: authStack.userPool.userPoolId // replace with react/src/aws-exports.js:aws_user_pools_id
 });
 
 if (apiStack.node.tryGetContext('AWS_SOLUTIONS_CHECK')) {

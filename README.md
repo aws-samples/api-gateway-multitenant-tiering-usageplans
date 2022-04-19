@@ -31,12 +31,11 @@ See [POOLING_AKI_KEYS](./POOLING_AKI_KEYS.md)
 Removing the deployed assets from AWS account is done with the following commands
 
 ```bash
-#  where TOP is root directory of the code sample
 
-cd ${TOP}/cdk
-cdk destroy
+cd cdk
+cdk destroy --all
 
-cd ${TOP}/react
+cd react
 amplify delete
 ```
 
