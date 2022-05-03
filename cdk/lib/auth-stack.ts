@@ -30,6 +30,12 @@ export class AuthStack extends Stack {
       },
     });
 
+    // Set the advancedSecurityMode to ENFORCED
+    const cfnUserPool = userPool.node.findChild('Resource') as cognito.CfnUserPool;
+    cfnUserPool.userPoolAddOns = {
+      advancedSecurityMode: 'ENFORCED'
+    };
+
     const client = userPool.addClient("WebClient", {
       userPoolClientName: "webClient",
       idTokenValidity: Duration.days(1),
