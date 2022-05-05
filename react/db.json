@@ -1,0 +1,54 @@
+{
+  "plans": [
+    {
+      "id": "0",
+      "name": "Test",
+      "description": "Not advertised to end-customers",
+      "quota": "10 per day",
+      "throttle": "1 TPS",
+      "price": 0
+    },
+    {
+      "id": "1",
+      "name": "Basic",
+      "description": "Provides basic level of service for developers.",
+      "quota": "1000 per week",
+      "throttle": "5 TPS",
+      "price": 10
+    },
+    {
+      "id": "2",
+      "name": "Premium",
+      "description": "Provides premium service for production workloads.",
+      "quota": "1000 per day",
+      "throttle": "40 TPS",
+      "price": 1000
+    }
+  ],
+  "keys": [
+    {
+      "id": "0",
+      "planId": "0",
+      "name": "TestKey",
+      "description": "test 1",
+      "enabled": false
+    },
+    {
+      "id": "1",
+      "planId": "0",
+      "name": "Test Key2",
+      "description": "test 2",
+      "enabled": true
+    },
+    {
+      "id": "2",
+      "planId": "1",
+      "name": "Basic Key",
+      "description": "",
+      "enabled": false
+    }
+  ],
+  "api": {
+    "items": []
+  }
+}
