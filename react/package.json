@@ -42,7 +42,7 @@
     ]
   },
   "devDependencies": {
-    "json-server": "^0.17.0",
+    "json-server": "^0.17.1",
     "react-scripts": "^5.0.0"
   }
 }
