@@ -25,7 +25,7 @@ See [WALKTHROUGH](./WALKTHROUGH.md)
 
 
 ## Enable Pooling
-See [POOLING_AKI_KEYS](./POOLING_AKI_KEYS.md)
+See [POOLING_API_KEYS](./POOLING_API_KEYS.md)
 
 ## Clean Up
 Removing the deployed assets from AWS account is done with the following commands
