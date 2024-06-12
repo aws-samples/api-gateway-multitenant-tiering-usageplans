@@ -54,4 +54,4 @@ Where `<UUID>`, `<API_GATEWAY>` and `<AWS_REGION>` can be discovered in the API 
 
 3. For the really curious, try loadtesting one of the other usage plans. Amazon API Gateway will throttle based on best-effort, so don't be suprised if a few extra requests get through on some experiements.
 ## Next
-Continue to the [POOLING_AKI_KEYS](./POOLING_AKI_KEYS.md)
+Continue to the [POOLING_API_KEYS](./POOLING_API_KEYS.md)
