@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-
-import Amplify from "aws-amplify";
+import { Amplify } from 'aws-amplify'
+import awsconfig from "./aws-exports";
 import { Authenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 
@@ -11,11 +11,11 @@ import {
 } from "@awsui/components-react";
 import "@awsui/global-styles/index.css";
 
-import awsconfig from "./aws-exports";
 import NavDrawer from "./components/Navigation/NavDrawer";
 import ToolsDrawer from "./components/Navigation/ToolsDrawer";
 import Content from "./components/Navigation/Content";
 
+// Configure Amplify with your awsconfig
 Amplify.configure(awsconfig);
 
 export default function App() {
@@ -36,9 +36,9 @@ export default function App() {
                 {
                   type: "button",
                   iconName: "angle-left-double",
-                  text: "Sign Out", 
-                  onClick: signOut
-                }
+                  text: "Sign Out",
+                  onClick: signOut,
+                },
               ]}
             />
           </div>
@@ -46,9 +46,7 @@ export default function App() {
             notifications={<Flashbar items={notifications} />}
             navigation={<NavDrawer />}
             tools={<ToolsDrawer user={user} signOut={signOut} />}
-            content={
-              <Content user={user} setNotifications={setNotifications} />
-            }
+            content={<Content user={user} setNotifications={setNotifications} />}
             headerSelector="#h"
           />
         </div>

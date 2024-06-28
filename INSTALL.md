@@ -22,6 +22,7 @@ npm install
 cdk bootstrap # may be able to skip this if you've used CDK before and infrastructure (e.g. CDK staging bucket) is already initialized 
 
 cdk deploy --all
+cdk destroy --all
 ```
 ## 3. Set up AWS Amplify and local frontend
 
