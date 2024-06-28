@@ -183,7 +183,7 @@ export class ApiStack extends Stack {
 
     // Lambda for basic health check, this will stay unprotected
     const getDataLambda = new lambda.Function(this, 'getData', {
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'get_data.handler',
       code: lambda.Code.fromAsset('../lambda'),
       role: lambdaReadRole,
@@ -192,7 +192,7 @@ export class ApiStack extends Stack {
 
     // getPlans   
     const getPlansLambda = new lambda.Function(this, 'getPlans', {
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'get_plans.handler',
       code: lambda.Code.fromAsset('../lambda'),
       role: lambdaReadRole,
@@ -205,7 +205,7 @@ export class ApiStack extends Stack {
 
     // getPlan   
     const getPlanLambda = new lambda.Function(this, 'getPlan', {
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'get_plan.handler',
       code: lambda.Code.fromAsset('../lambda'),
       role: lambdaReadRole,
@@ -218,7 +218,7 @@ export class ApiStack extends Stack {
 
     // getKeys   
     const getKeysLambda = new lambda.Function(this, 'getKeys', {
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'get_keys.handler',
       code: lambda.Code.fromAsset('../lambda'),
       role: lambdaReadRole,
@@ -231,7 +231,7 @@ export class ApiStack extends Stack {
 
     // createKey  
     const createKeyLambda = new lambda.Function(this, 'createKey', {
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'create_key.handler',
       code: lambda.Code.fromAsset('../lambda'),
       role: lambdaCreateRole,
@@ -244,7 +244,7 @@ export class ApiStack extends Stack {
 
     // getKey    
     const getKeyLambda = new lambda.Function(this, 'getKey', {
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'get_key.handler',
       code: lambda.Code.fromAsset('../lambda'),
       role: lambdaReadRole,
@@ -257,7 +257,7 @@ export class ApiStack extends Stack {
 
     // updateKey 
     const updateKeyLambda = new lambda.Function(this, 'updateKey', {
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'update_key.handler',
       code: lambda.Code.fromAsset('../lambda'),
       role: lambdaUpdateRole,
@@ -270,7 +270,7 @@ export class ApiStack extends Stack {
 
     // deleteKey 
     const deleteKeyLambda = new lambda.Function(this, 'deleteKey', {
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'delete_key.handler',
       code: lambda.Code.fromAsset('../lambda'),
       role: lambdaDeleteRole,
@@ -289,7 +289,7 @@ export class ApiStack extends Stack {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS // this is also the default
       },
-      cloudWatchRole: false,
+      cloudWatchRole: true,
       deployOptions: {
         cachingEnabled: false, // Suggest true for production systems
         tracingEnabled: false, // Suggest true for production/development systems.
