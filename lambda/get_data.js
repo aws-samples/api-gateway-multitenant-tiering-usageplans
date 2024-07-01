@@ -1,6 +1,4 @@
-const AWS = require('aws-sdk');
-
-exports.handler = function(event, context, callback) {
+exports.handler = async function(event) {
   const response = { 
     items: [
       { 
@@ -14,10 +12,10 @@ exports.handler = function(event, context, callback) {
         category: "beverage",  
         price: 5.99, 
         unit: "qt"
-        }
+      }
     ]
   }
-  callback(null,{ 
+  return { 
     "isBase64Encoded": false,
     "statusCode": 200,
     "headers": {
@@ -26,6 +24,5 @@ exports.handler = function(event, context, callback) {
         "Access-Control-Allow-Origin": "*"
     }, 
     "body": JSON.stringify(response)
-  });
+  };
 }
-
