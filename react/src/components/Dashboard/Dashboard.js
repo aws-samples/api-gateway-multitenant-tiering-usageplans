@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
 import {
   Box,
   Header,
   SpaceBetween,
 } from "@awsui/components-react";
-import { getPlans } from "../Plans/PlanService";
+import React, { useEffect, useState } from "react";
 import { getKeys } from "../Keys/KeyService";
-import OverviewPanel from "./OverviewPanel";
+import { getPlans } from "../Plans/PlanService";
 import ApiTestPanel from "./ApiTestPanel";
+import OverviewPanel from "./OverviewPanel";
 
 export default function Dashboard({user}) {
   const [plans, setPlans] = useState([]);
@@ -15,8 +15,10 @@ export default function Dashboard({user}) {
 
   useEffect(() => {
     getPlans(user).then((items) => {
+      console.log(items)
       setPlans(items);
       getKeys(user).then((data) => {
+        console.log(data)
         setKeys(data);
       }).catch((err)=>{
         console.error("ERROR: getKeys() failed", JSON.stringify(err));

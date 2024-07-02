@@ -4,8 +4,8 @@ export function delay(ms) {
 }
 
 export function getJwtFromUser(user) {
-  // console.log(`user = ${user}`);
+  console.log(`user = ${user}`);
   const token = user?.signInUserSession.idToken.jwtToken;
-  // console.log(`token = ${token}`);
+  console.log(`token = ${token}`);
   return token;
 }

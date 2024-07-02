@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   ColumnLayout,
@@ -6,6 +5,7 @@ import {
   Header,
   Link,
 } from "@awsui/components-react";
+import React from "react";
 import EmptyState from "../Navigation/EmptyState";
 
 export default function OverviewPanel({ plans, keys }) {
@@ -22,10 +22,10 @@ export default function OverviewPanel({ plans, keys }) {
         {plans ? (
           plans.map((plan) => {
             return (
-              <div key={plan.id}>
-                <Box>{plan.name}</Box>
+              <div key={plan.id.S}>
+                <Box>{plan.name.S}</Box>
                 <Link fontSize="display-l" href="#">
-                  {keys.filter((key) => key.planId === plan.id).length}
+                  {keys.filter((key) => key.planId.S === plan.id.S).length}
                 </Link>
               </div>
             );

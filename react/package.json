@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@aws-amplify/ui-react": "^5.3.3",
+    "@aws-sdk/util-dynamodb": "^3.606.0",
     "@awsui/collection-hooks": "^1.0.21",
     "@awsui/components-react": "^3.0.433",
     "@awsui/global-styles": "^1.0.10",

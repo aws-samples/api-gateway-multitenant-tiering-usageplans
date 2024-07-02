@@ -27,7 +27,9 @@ function getPlanLocal(id) {
 // REMOTE VERSIONS
 
 function getPlansRemote(user) { 
+  console.log(`Plans user: ${user}`)
   const jwt = getJwtFromUser(user);
+  console.log(`Plans jwt: ${jwt}`)
   return fetch(`${remoteUrlBase}/admin/plans`, { 
     method: 'GET', 
     headers: { 

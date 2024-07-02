@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from "react";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
+import { useCollection } from "@awsui/collection-hooks";
 import {
   Button,
+  CollectionPreferences,
   Header,
   Pagination,
+  SpaceBetween,
   Table,
   TextFilter,
-  CollectionPreferences,
-  SpaceBetween,
 } from "@awsui/components-react";
-import { useCollection } from "@awsui/collection-hooks";
-import { deleteKey, getKeys } from "./KeyService";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Link } from "react-router-dom";
 import EmptyState from "../Navigation/EmptyState";
+import { deleteKey, getKeys } from "./KeyService";
 
 const COLUMN_DEFINITIONS = [
   {
@@ -97,7 +98,17 @@ export default function KeysList({ user, setNotifications }) {
     setLoading(true);
     getKeys(user)
       .then((items) => {
-        setAllItems(items);
+        const convertedItems = items.map((item) => { 
+          const unmarshalledItem = unmarshall(item);
+          return {
+            id: unmarshalledItem.id,
+            name: unmarshalledItem.name,
+            description: unmarshalledItem.description,
+            planId: unmarshalledItem.planId,
+            enabled: unmarshalledItem.enabled
+          }
+        })
+        setAllItems(convertedItems);
       })
       .catch((reason) => console.error("getKeys() failed: ", reason))
       .finally(() => setLoading(false));
